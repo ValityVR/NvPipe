@@ -34,6 +34,7 @@
 #cmakedefine NVPIPE_WITH_ENCODER
 #cmakedefine NVPIPE_WITH_DECODER
 #cmakedefine NVPIPE_WITH_OPENGL
+#cmakedefine NVPIPE_WITH_D3D11
 
 #ifdef _WIN32
 #	define NVPIPE_EXPORT __declspec(dllexport)

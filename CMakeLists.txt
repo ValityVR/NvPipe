@@ -52,13 +52,35 @@ list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
 option(NVPIPE_WITH_ENCODER "Enables the NvPipe encoding interface." ON)
 option(NVPIPE_WITH_DECODER "Enables the NvPipe decoding interface." ON)
 option(NVPIPE_WITH_OPENGL "Enables the NvPipe OpenGL interface." ON)
+option(NVPIPE_WITH_D3D11 "Enables the NvPipe Direct3D11 interface." ON)
 option(NVPIPE_BUILD_EXAMPLES "Builds the NvPipe example applications (requires both encoder and decoder)." ON)
+option(NVPIPE_STATIC_LIB "Builds a static library of NvPipe instead of a shared library." OFF)
+option(NVPIPE_MSVC_STATIC_CRT "Links against the static instead of dynamic MSVC CRT libraries." OFF)
+option(NVPIPE_MSVC_NO_ITERATOR_DEBUGGING "Disables linking to the iterator debugging MSVC CRT libraries." OFF)
 
 # Header
 configure_file(src/NvPipe.h.in include/NvPipe.h @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
-# NvPipe shared library
+# MSVC specific configurations
+if (MSVC)
+    if (NVPIPE_MSVC_STATIC_CRT)
+        foreach(flag_var
+                CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+                CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+        if(${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endif(${flag_var} MATCHES "/MD")
+        endforeach(flag_var)
+    endif()
+
+    if (NVPIPE_MSVC_NO_ITERATOR_DEBUGGING)
+        add_compile_definitions(_HAS_ITERATOR_DEBUGGING=0)
+        add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
+    endif()
+endif()
+
+# NvPipe library
 list(APPEND NVPIPE_SOURCES
     src/NvPipe.cu
     src/NvCodec/Utils/ColorSpace.cu
@@ -95,7 +117,12 @@ endif()
 
 include(GNUInstallDirs)
 
+if (NVPIPE_STATIC_LIB)
+cuda_add_library(${PROJECT_NAME} STATIC ${NVPIPE_SOURCES})
+else()
 cuda_add_library(${PROJECT_NAME} SHARED ${NVPIPE_SOURCES})
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>

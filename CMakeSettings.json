@@ -1,0 +1,17 @@
+﻿{
+  "configurations": [
+    {
+        "name": "x64-Debug",
+        "generator": "Ninja",
+        "configurationType": "Debug",
+        "inheritEnvironments": [
+            "msvc_x64_x64"
+        ],
+        "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+        "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+        "cmakeCommandArgs": "-DNVPIPE_STATIC_LIB=1 -DNVPIPE_MSVC_STATIC_CRT=1 -DNVPIPE_MSVC_NO_ITERATOR_DEBUGGING=1",
+        "buildCommandArgs": "-v",
+        "ctestCommandArgs": ""
+    }
+  ]
+}
