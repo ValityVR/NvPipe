@@ -1258,7 +1258,7 @@ NVPIPE_EXPORT const char* NvPipe_GetError(NvPipe* nvp)
 
 #ifdef NVPIPE_WITH_D3D11
 
-NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, ID3D11Texture2D* texture, uint32_t target, uint8_t* dst, uint64_t dstSize, bool forceIFrame)
+NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, const void* texture, uint8_t* dst, uint64_t dstSize, bool forceIFrame)
 {
     Instance* instance = static_cast<Instance*>(nvp);
     if (!instance->encoder)
@@ -1269,7 +1269,8 @@ NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, ID3D11Texture2D* t
 
     try
     {
-        return instance->encoder->encodeTextureD3D11(texture, dst, dstSize, forceIFrame);
+        ID3D11Texture2D* d3d11Texture2D = reinterpret_cast<ID3D11Texture2D*>(const_cast<void*>(texture));
+        return instance->encoder->encodeTextureD3D11(d3d11Texture2D, dst, dstSize, forceIFrame);
     }
     catch (Exception& e)
     {

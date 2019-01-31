@@ -1,14 +1,14 @@
 ﻿{
   "configurations": [
     {
-        "name": "x64-Debug",
+        "name": "NvPipe-Debug-x64",
         "generator": "Ninja",
         "configurationType": "Debug",
         "inheritEnvironments": [
             "msvc_x64_x64"
         ],
         "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-        "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+        "installRoot": "${projectDir}\\..\\nvpipe-build",
         "cmakeCommandArgs": "-DNVPIPE_STATIC_LIB=1 -DNVPIPE_MSVC_STATIC_CRT=1 -DNVPIPE_MSVC_NO_ITERATOR_DEBUGGING=1",
         "buildCommandArgs": "-v",
         "ctestCommandArgs": ""
