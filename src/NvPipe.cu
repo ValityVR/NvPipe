@@ -54,6 +54,8 @@
 #include <cuda_d3d11_interop.h>
 #endif
 
+extern "C" {
+
 class Exception
 {
 public:
@@ -375,6 +377,8 @@ class GraphicsResourceRegistryD3D11
 public:
     virtual ~GraphicsResourceRegistryD3D11()
     {
+        cudaThreadSynchronize();
+
         // Unregister all
         for (auto& r : this->registeredTextures)
             CUDA_THROW(cudaGraphicsUnregisterResource(r.second.graphicsResource),
@@ -605,6 +609,7 @@ public:
 #endif
 
 #ifdef NVPIPE_WITH_D3D11
+
     uint64_t encodeTextureD3D11(ID3D11Texture2D* texture, uint8_t* dst, uint64_t dstSize, bool forceIFrame)
     {
         if (this->format != NVPIPE_BGRA32)
@@ -620,7 +625,7 @@ public:
         this->recreate(width, height);
 
         // Map texture and copy input to encoder
-        cudaGraphicsResource_t resource = this->registry.getTextureGraphicsTextureD3D11(texture, width, height, cudaGraphicsRegisterFlagsReadOnly);
+        cudaGraphicsResource_t resource = this->registry.getTextureGraphicsTextureD3D11(texture, width, height, cudaGraphicsRegisterFlagsNone);
         CUDA_THROW(cudaGraphicsMapResources(1, &resource),
             "Failed to map texture graphics resource");
         cudaArray_t array;
@@ -1258,7 +1263,7 @@ NVPIPE_EXPORT const char* NvPipe_GetError(NvPipe* nvp)
 
 #ifdef NVPIPE_WITH_D3D11
 
-NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, const void* texture, uint8_t* dst, uint64_t dstSize, bool forceIFrame)
+NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, ID3D11Texture2D* texture, uint8_t* dst, uint64_t dstSize, bool forceIFrame)
 {
     Instance* instance = static_cast<Instance*>(nvp);
     if (!instance->encoder)
@@ -1269,8 +1274,7 @@ NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, const void* textur
 
     try
     {
-        ID3D11Texture2D* d3d11Texture2D = reinterpret_cast<ID3D11Texture2D*>(const_cast<void*>(texture));
-        return instance->encoder->encodeTextureD3D11(d3d11Texture2D, dst, dstSize, forceIFrame);
+        return instance->encoder->encodeTextureD3D11(texture, dst, dstSize, forceIFrame);
     }
     catch (Exception& e)
     {
@@ -1281,6 +1285,7 @@ NVPIPE_EXPORT uint64_t NvPipe_EncodeTextureD3D11(NvPipe* nvp, const void* textur
 
 #endif
 
+} // extern "C"
 
 
 
