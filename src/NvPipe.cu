@@ -377,12 +377,20 @@ class GraphicsResourceRegistryD3D11
 public:
     virtual ~GraphicsResourceRegistryD3D11()
     {
+        // TODO: Is this needed?
         cudaThreadSynchronize();
 
         // Unregister all
         for (auto& r : this->registeredTextures)
-            CUDA_THROW(cudaGraphicsUnregisterResource(r.second.graphicsResource),
-                "Failed to unregister D3D11 texture graphics resource");
+        {
+            if (r.second.graphicsResource)
+            {
+                CUDA_THROW(cudaGraphicsUnregisterResource(r.second.graphicsResource),
+                    "Failed to unregister D3D11 texture graphics resource");
+
+                r.first->Release();
+            }
+        }
     }
 
     cudaGraphicsResource_t getTextureGraphicsTextureD3D11(ID3D11Texture2D* texture, uint32_t width, uint32_t height, uint32_t flags)
@@ -390,16 +398,22 @@ public:
         // Check if D3D11 texture needs to be (re)registered
         RegisteredResource& reg = this->registeredTextures[texture];
 
-        if (reg.width != width || reg.height != height) {
-            if (reg.graphicsResource) {
+        if (reg.width != width || reg.height != height) 
+        {
+            if (reg.graphicsResource) 
+            {
                 CUDA_THROW(cudaGraphicsUnregisterResource(reg.graphicsResource),
                     "Failed to unregister D3D11 graphics resource");
 
                 reg.graphicsResource = nullptr;
+
+                texture->Release();
             }
 
             CUDA_THROW(cudaGraphicsD3D11RegisterResource(&reg.graphicsResource, texture, flags),
                 "Failed to register D3D11 texture as graphics resource");
+
+            texture->AddRef();
 
             reg.width = width;
             reg.height = height;
