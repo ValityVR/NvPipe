@@ -894,6 +894,47 @@ public:
         return 0;
     }
 
+#ifdef NVPIPE_WITH_D3D11
+	uint64_t decodeTextureD3D11(const uint8_t* src, uint64_t srcSize, class ID3D11Texture2D* texture)
+	{
+		if (this->format != NVPIPE_BGRA32)
+			throw Exception("The D3D11 interface only supports the BGRA32 format");
+
+		D3D11_TEXTURE2D_DESC desc;
+		texture->GetDesc(&desc);
+
+		uint32_t width = desc.Width;
+		uint32_t height = desc.Height;
+
+		// Recreate encoder if size changed
+		this->recreate(width, height);
+
+		uint8_t* decoded = this->decode(src, srcSize);
+
+		if (nullptr != decoded)
+		{
+			// Convert to RGBA
+			this->recreateDeviceBuffer(width, height);
+			Nv12ToBgra32(decoded, width, (uint8_t*)this->deviceBuffer, width * 4, width, height);
+
+			// Copy output to texture
+			cudaGraphicsResource_t resource = this->registry.getTextureGraphicsTextureD3D11(texture, width, height, cudaGraphicsRegisterFlagsWriteDiscard);
+			CUDA_THROW(cudaGraphicsMapResources(1, &resource),
+				"Failed to map texture graphics resource");
+			cudaArray_t array;
+			CUDA_THROW(cudaGraphicsSubResourceGetMappedArray(&array, resource, 0, 0),
+				"Failed get texture graphics resource array");
+			CUDA_THROW(cudaMemcpy2DToArray(array, 0, 0, this->deviceBuffer, width * 4, width * 4, height, cudaMemcpyDeviceToDevice),
+				"Failed to copy to texture array");
+			CUDA_THROW(cudaGraphicsUnmapResources(1, &resource),
+				"Failed to unmap texture graphics resource");
+
+			return width * height * 4;
+		}
+		return 0;
+	}
+#endif
+
 #ifdef NVPIPE_WITH_OPENGL
 
     uint64_t decodeTexture(const uint8_t* src, uint64_t srcSize, uint32_t texture, uint32_t target, uint32_t width, uint32_t height)

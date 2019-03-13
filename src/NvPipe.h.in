@@ -188,6 +188,21 @@ NVPIPE_EXPORT NvPipe* NvPipe_CreateDecoder(NvPipe_Format format, NvPipe_Codec co
  */
 NVPIPE_EXPORT uint64_t NvPipe_Decode(NvPipe* nvp, const uint8_t* src, uint64_t srcSize, void* dst, uint32_t width, uint32_t height);
 
+#ifdef NVPIPE_WITH_D3D11
+
+/**
+ * @brief Decodes a single frame to an D3D texture.
+ * @param nvp Decoder instance.
+ * @param src Compressed frame data in host memory.
+ * @param srcSize Size of compressed data.
+ * @param texture 3DD texture.
+ * @param width Width of frame in pixels.
+ * @param height Height of frame in pixels.
+ * @return Size of decoded data in bytes or 0 on error.
+ */
+NVPIPE_EXPORT uint64_t NvPipe_DecodeTextureD3D11(NvPipe* nvp, const uint8_t* src, uint64_t srcSize, class ID3D11Texture2D* texture);
+
+#endif
 
 #ifdef NVPIPE_WITH_OPENGL
 
